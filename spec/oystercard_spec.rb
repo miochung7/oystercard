@@ -2,6 +2,7 @@ require 'oystercard'
 
 describe Oystercard do
   let(:oystercard) { Oystercard.new}
+  let(:station) { double :station }
 
   describe 'initialisation - balance' do
     it 'shows a default balance of 0' do
@@ -37,23 +38,32 @@ describe Oystercard do
   # end
 
   describe '#in_journey?' do
-    it 'tracks the status of the journey' do
-      expect(oystercard.in_journey).to eq false
+    it 'equals to true when touched in' do
+      oystercard.top_up(10)
+      oystercard.touch_in(station)
+      expect(oystercard.in_journey?).to eq true
       # expect(subject).not_to be_in_journey
     end
   end
+
 
   describe '#touch_in' do
     it { is_expected.to respond_to :touch_in }
 
     it 'changes the status of #in_journey to true' do
       oystercard.top_up(30)
-      oystercard.touch_in
-      expect(oystercard.in_journey).to eq true
+      oystercard.touch_in(station)
+      expect(oystercard.in_journey?).to eq true
     end
 
     it 'should raise an error if balance is less than £1' do
-      expect{ oystercard.touch_in }.to raise_error 'Please top up!'
+      expect{ oystercard.touch_in(station) }.to raise_error 'Please top up!'
+    end
+
+    it 'stores the entry_station' do
+      oystercard.top_up(10)
+      oystercard.touch_in(station)
+      expect(oystercard.entry_station).to eq station
     end
   end
 
@@ -63,15 +73,17 @@ describe Oystercard do
     it 'changes the status of #in_journey to false' do
       # oystercard.top_up(30)
       oystercard.touch_out
-      expect(oystercard.in_journey).to eq false
+      expect(oystercard.in_journey?).to eq false
     end
 
     it 'deducts the correct amount from the balance' do
       oystercard.top_up(40)
-      oystercard.touch_in
+      oystercard.touch_in(station)
       # p oystercard.touch_out(10)
       expect{ oystercard.touch_out }.to change{ oystercard.balance }.by (-Oystercard::CHARGE)
     end
   end
+
+
 
 end
